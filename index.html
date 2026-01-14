@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訂單金額統計助手 - 整理優化版</title>
+    <style>
+        /* --- 變數定義 --- */
+        :root {
+            --primary-color: #3498db;
+            --primary-hover: #2980b9;
+            --success-color: #27ae60;
+            --success-hover: #219150;
+            --danger-color: #e74c3c;
+            --gray-color: #95a5a6;
+            --gray-hover: #7f8c8d;
+            --bg-color: #f4f7f9;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #e0e6ed;
+            --hint-bg: #e7f3ff;
+            --hint-border: #b3d7ff;
+            --hint-text: #0056b3;
+        }
+
+        /* --- 基礎樣式 --- */
+        body { 
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; 
+            max-width: 488px; 
+            margin: 20px auto; 
+            padding: 15px; 
+            line-height: 1.6; 
+            background-color: var(--bg-color); 
+            color: var(--text-color);
+        }
+
+        .container { 
+            background: var(--card-bg); 
+            padding: 20px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+        }
+
+        h2 { 
+            text-align: center; 
+            margin-top: 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+            font-size: 1.4rem;
+        }
+
+        /* --- 提示區域 --- */
+        .hint { 
+            background-color: var(--hint-bg); 
+            border: 1px solid var(--hint-border); 
+            color: var(--hint-text); 
+            font-size: 13px; 
+            padding: 12px 15px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+        }
+        .hint span { 
+            display: block; 
+            position: relative; 
+            padding-left: 18px; 
+        }
+        .hint span::before { 
+            content: "•"; 
+            position: absolute; 
+            left: 0; 
+            font-weight: bold; 
+        }
+
+        /* --- 輸入區域 --- */
+        textarea { 
+            width: 100%; 
+            height: 160px; 
+            padding: 12px; 
+            border: 2px solid var(--border-color); 
+            border-radius: 10px; 
+            font-size: 14px; 
+            margin-bottom: 15px; 
+            box-sizing: border-box; 
+            resize: vertical; 
+            transition: border-color 0.3s;
+        }
+        textarea:focus { 
+            outline: none; 
+            border-color: var(--primary-color); 
+        }
+
+        /* --- 按鈕樣式 --- */
+        .btn-group { 
+            display: flex; 
+            flex-wrap: wrap;
+            gap: 8px; 
+            margin-bottom: 20px; 
+        }
+        button { 
+            flex: 1; 
+            min-width: 100px;
+            padding: 10px 5px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 13px; 
+            font-weight: bold; 
+            transition: all 0.3s; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .process-btn { background-color: var(--primary-color); color: white; }
+        .process-btn:hover { background-color: var(--primary-hover); }
+        .copy-btn { background-color: var(--success-color); color: white; }
+        .copy-btn:hover { background-color: var(--success-hover); }
+        .clear-btn { background-color: var(--gray-color); color: white; }
+        .clear-btn:hover { background-color: var(--gray-hover); }
+        
+        /* --- 結果表格 --- */
+        #resultArea { margin-top: 20px; display: none; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #resultTable { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 15px; 
+            background: #fff; 
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 14px;
+        }
+        #resultTable th { 
+            background-color: #f8f9fa; 
+            color: #34495e; 
+            padding: 10px 12px; 
+            border-bottom: 2px solid #eee; 
+        }
+        #resultTable td { 
+            padding: 10px 12px; 
+            border-bottom: 1px solid #f1f1f1; 
+            color: var(--text-color); 
+            cursor: grab; 
+            position: relative; 
+        }
+        #resultTable th:first-child, #resultTable td:first-child { text-align: left; }
+        #resultTable th:last-child, #resultTable td:last-child { text-align: center; width: 70px; }
+        #resultTable tr:last-child td { border-bottom: none; }
+        
+        /* --- 拖放狀態 --- */
+        .dragging { opacity: 0.4; background-color: #f0f0f0; }
+        .drop-merge { background-color: #fff3e0 !important; outline: 2px solid #ff9800; z-index: 10; }
+        .drop-before { border-top: 3px solid var(--primary-color) !important; }
+        .drop-after { border-bottom: 3px solid var(--primary-color) !important; }
+
+        /* --- 統計區塊 --- */
+        .summary-box { 
+            background: #fdf9f2; 
+            border-left: 5px solid #f1c40f; 
+            padding: 15px; 
+            border-radius: 8px; 
+        }
+        .summary-line { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 16px; 
+            font-weight: bold; 
+            margin-bottom: 5px;
+        }
+        .total-price { color: var(--danger-color); font-size: 20px; }
+        
+        /* --- 彈窗與訊息 --- */
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); 
+            z-index: 2000; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .modal-content { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            width: 85%;
+            max-width: 300px; 
+            text-align: center; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
+        }
+        .modal-input { 
+            width: 80%; 
+            padding: 10px; 
+            margin-bottom: 20px; 
+            border: 2px solid #ddd; 
+            border-radius: 6px; 
+            font-size: 18px; 
+            text-align: center; 
+        }
+        .modal-btns { display: flex; gap: 10px; }
+
+        .msg-box { 
+            position: fixed; 
+            bottom: 30px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: #333; 
+            color: white; 
+            padding: 10px 20px; 
+            border-radius: 50px; 
+            display: none; 
+            z-index: 3000; 
+            font-size: 13px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            white-space: nowrap;
+        }
+        
+        .star-mark { 
+            color: var(--danger-color); 
+            font-weight: bold; 
+            margin-left: 4px; 
+            font-size: 1.1em; 
+            vertical-align: middle; 
+        }
+    </style>
+</head>
+<body>
+
+<!-- 通知訊息 -->
+<div id="toast" class="msg-box"></div>
+
+<!-- 合併確認彈窗 -->
+<div id="mainModal" class="modal">
+    <div class="modal-content">
+        <p id="modalMsg" style="margin-top: 0;">訊息內容</p>
+        <div id="priceInputArea" style="display: none;">
+            <p style="font-size: 13px; color: #666;">請確認或修改合併後的單價：</p>
+            <input type="number" id="customPrice" class="modal-input" placeholder="金額">
+        </div>
+        <div class="modal-btns">
+            <button class="process-btn" id="modalYes">確定合併</button>
+            <button class="clear-btn" id="modalNo">取消</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <h2>🍱 訂單明細統計助手 🍱</h2>
+    
+    <div class="hint">
+        <span>格式：姓名-餐點 價格 (支援「元」字)</span>
+        <span>相同名稱但價格不同時會標註 *</span>
+        <span><b>拖拉</b>品項可進行 <b>合併</b> 或 <b>排序</b></span>
+    </div>
+    
+    <textarea id="inputData" placeholder="請輸入訂單，例如：
+王小明-排骨飯 100
+李大華-排骨飯 120元
+張阿三-雞腿飯 110+大冰紅 30元"></textarea>
+    
+    <div class="btn-group">
+        <button class="process-btn" onclick="processOrder()">🚀 開始統計</button>
+        <button class="copy-btn" onclick="copyResult()">📋 複製結果</button>
+        <button class="clear-btn" onclick="clearContent()">🗑️ 清除</button>
+    </div>
+
+    <!-- 結果顯示區 -->
+    <div id="resultArea">
+        <table id="resultTable">
+            <thead>
+                <tr>
+                    <th>品項與備註</th>
+                    <th>數量</th>
+                </tr>
+            </thead>
+            <tbody id="resultBody"></tbody>
+        </table>
+
+        <div class="summary-box">
+            <div class="summary-line">
+                <span>總份數：</span>
+                <span id="totalQty">0 份</span>
+            </div>
+            <div class="summary-line">
+                <span>應收總金額：</span>
+                <span id="totalAmount" class="total-price">$0</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 全域狀態 ---
+    let currentSummary = []; 
+    let dragSrcIdx = null;
+    let currentDropTargetIdx = null;
+    let dropAction = null; 
+
+    /**
+     * 顯示短暫提示訊息 (Toast)
+     */
+    function showMessage(text) {
+        const toast = document.getElementById('toast');
+        toast.innerText = text;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 2000);
+    }
+
+    /**
+     * 主處理邏輯：解析輸入內容並統計
+     */
+    function processOrder() {
+        const input = document.getElementById('inputData').value.trim();
+        if (!input) return;
+
+        const lines = input.split('\n');
+        const summaryObj = {};
+
+        lines.forEach(line => {
+            let trimmed = line.trim();
+            // 基本過濾：空行或不含 '-' 符號的行不處理
+            if (!trimmed || !trimmed.includes('-')) return;
+            
+            // 移除 '=' 之後的內容（通常是金額計算）
+            if (trimmed.includes('=')) trimmed = trimmed.split('=')[0].trim();
+
+            const parts = trimmed.split('-');
+            const content = parts.slice(1).join('-').trim();
+            const rawItems = content.split('+');
+            
+            rawItems.forEach(rawItem => {
+                const subItem = rawItem.trim();
+                // Regex 說明：(品項名稱)(數字金額)元?
+                const match = subItem.match(/^(.*?)(\d+)\s*元?$/);
+                if (match) {
+                    let detail = match[1].trim(); 
+                    const price = parseInt(match[2], 10);
+                    
+                    // 自動美化：在特定甜度冰塊關鍵字前補空格
+                    detail = detail.replace(/([^\s])(無糖|微糖|一分糖|二分糖|三分糖|半糖|少糖|七分糖|去冰|微冰|少冰|多冰|正常|熱)/g, '$1 $2');
+                    detail = detail.replace(/\s+/g, ' ').trim();
+
+                    const key = `${detail}_${price}`;
+                    if (!summaryObj[key]) {
+                        summaryObj[key] = { name: detail, qty: 0, price: price, isMinor: false };
+                    }
+                    summaryObj[key].qty += 1;
+                }
+            });
+        });
+
+        currentSummary = Object.values(summaryObj);
+        checkMinorItems(); 
+        // 初始排序：依中文名稱
+        currentSummary.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+        renderDisplay();
+    }
+
+    /**
+     * 檢查是否有同名但不同價的品項，並標註 *
+     */
+    function checkMinorItems() {
+        currentSummary.forEach(item => item.isMinor = false);
+        const nameGroups = {};
+        
+        currentSummary.forEach(item => {
+            const cleanName = item.name.replace(/\s+/g, ''); 
+            if (!nameGroups[cleanName]) nameGroups[cleanName] = [];
+            nameGroups[cleanName].push(item);
+        });
+
+        Object.keys(nameGroups).forEach(cleanName => {
+            const group = nameGroups[cleanName];
+            if (group.length > 1) {
+                // 排序：數量多者優先，其次價格低者為主要
+                group.sort((a, b) => (b.qty !== a.qty) ? (b.qty - a.qty) : (a.price - b.price));
+                for (let i = 1; i < group.length; i++) {
+                    group[i].isMinor = true;
+                }
+            }
+        });
+    }
+
+    /**
+     * 渲染畫面內容
+     */
+    function renderDisplay() {
+        const tbody = document.getElementById('resultBody');
+        tbody.innerHTML = "";
+        let totalQty = 0;
+        let totalAmount = 0;
+
+        currentSummary.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.draggable = true;
+            tr.dataset.index = index;
+            
+            const starHtml = item.isMinor ? '<span class="star-mark">*</span>' : '';
+            tr.innerHTML = `<td>${item.name}${starHtml}</td><td>${item.qty}</td>`;
+            
+            // 綁定拖放事件
+            tr.addEventListener('dragstart', handleDragStart);
+            tr.addEventListener('dragover', handleDragOver);
+            tr.addEventListener('dragleave', handleDragLeave);
+            tr.addEventListener('drop', handleDrop);
+            tr.addEventListener('dragend', handleDragEnd);
+
+            tbody.appendChild(tr);
+            totalQty += item.qty;
+            totalAmount += (item.qty * item.price);
+        });
+
+        document.getElementById('totalQty').innerText = `${totalQty} 份`;
+        document.getElementById('totalAmount').innerText = `$${totalAmount.toLocaleString()}`;
+        document.getElementById('resultArea').style.display = 'block';
+    }
+
+    // --- 拖放邏輯 (Drag & Drop) ---
+
+    function handleDragStart(e) {
+        dragSrcIdx = parseInt(this.dataset.index);
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(e) {
+        if (e.preventDefault) e.preventDefault();
+        const targetIdx = parseInt(this.dataset.index);
+        if (dragSrcIdx === targetIdx) return false;
+
+        const rect = this.getBoundingClientRect();
+        const relY = e.clientY - rect.top;
+        const height = rect.height;
+
+        this.classList.remove('drop-before', 'drop-after', 'drop-merge');
+
+        // 判斷位置：上方30%為插入前方，下方30%為插入後方，中間40%為合併
+        if (relY < height * 0.3) {
+            this.classList.add('drop-before');
+            dropAction = 'before';
+        } else if (relY > height * 0.7) {
+            this.classList.add('drop-after');
+            dropAction = 'after';
+        } else {
+            this.classList.add('drop-merge');
+            dropAction = 'merge';
+        }
+        currentDropTargetIdx = targetIdx;
+        return false;
+    }
+
+    function handleDragLeave() {
+        this.classList.remove('drop-before', 'drop-after', 'drop-merge');
+    }
+
+    function handleDrop(e) {
+        if (e.stopPropagation) e.stopPropagation();
+        const targetIdx = currentDropTargetIdx;
+        const srcIdx = dragSrcIdx;
+
+        if (srcIdx === null || targetIdx === null || srcIdx === targetIdx) return;
+
+        if (dropAction === 'merge') {
+            triggerMerge(srcIdx, targetIdx);
+        } else {
+            // 位移邏輯
+            const item = currentSummary.splice(srcIdx, 1)[0];
+            let newTarget = targetIdx;
+            // 修正位移後的 index 變化
+            if (dropAction === 'after' && srcIdx < targetIdx) newTarget = targetIdx;
+            else if (dropAction === 'before' && srcIdx > targetIdx) newTarget = targetIdx;
+            
+            currentSummary.splice(newTarget, 0, item);
+            renderDisplay();
+        }
+    }
+
+    function handleDragEnd() {
+        this.classList.remove('dragging');
+        document.querySelectorAll('#resultTable tr').forEach(row => {
+            row.classList.remove('drop-before', 'drop-after', 'drop-merge');
+        });
+    }
+
+    /**
+     * 處理品項合併
+     */
+    function triggerMerge(srcIdx, targetIdx) {
+        const src = currentSummary[srcIdx];
+        const target = currentSummary[targetIdx];
+        const modal = document.getElementById('mainModal');
+        const modalMsg = document.getElementById('modalMsg');
+        const priceArea = document.getElementById('priceInputArea');
+        const priceInput = document.getElementById('customPrice');
+        
+        priceArea.style.display = 'none';
+
+        if (src.price !== target.price) {
+            modalMsg.innerHTML = `⚠️ 兩品項單價不同！<br><span style="font-size:13px; color:#d93025;">${src.name} ($${src.price})<br>${target.name} ($${target.price})</span><br><br>合併後要使用哪個金額？`;
+            priceArea.style.display = 'block';
+            priceInput.value = target.price;
+        } else {
+            modalMsg.innerText = `將「${src.name}」合併至「${target.name}」？`;
+        }
+
+        modal.style.display = 'flex';
+
+        document.getElementById('modalYes').onclick = function() {
+            if (src.price !== target.price) {
+                target.price = parseInt(priceInput.value) || target.price;
+            }
+            target.qty += src.qty;
+            currentSummary.splice(srcIdx, 1);
+            checkMinorItems(); 
+            modal.style.display = 'none';
+            renderDisplay();
+            showMessage("品項已合併");
+        };
+        document.getElementById('modalNo').onclick = function() { modal.style.display = 'none'; };
+    }
+
+    /**
+     * 複製統計結果到剪貼簿
+     */
+    function copyResult() {
+        if (currentSummary.length === 0) return;
+        
+        let copyText = "【訂單統計結果】\n";
+        currentSummary.forEach(item => {
+            const starText = item.isMinor ? "*" : "";
+            copyText += `${item.name}${starText} * ${item.qty}\n`;
+        });
+        copyText += `\n總份數：${document.getElementById('totalQty').innerText}\n`;
+        copyText += `總金額：${document.getElementById('totalAmount').innerText}`;
+        
+        const el = document.createElement('textarea');
+        el.value = copyText;
+        document.body.appendChild(el); 
+        el.select();
+        try {
+            document.execCommand('copy');
+            showMessage("統計結果已複製！");
+        } catch (err) {
+            showMessage("複製失敗，請手動複製");
+        }
+        document.body.removeChild(el);
+    }
+
+    /**
+     * 清除內容
+     */
+    function clearContent() {
+        document.getElementById('inputData').value = "";
+        document.getElementById('resultArea').style.display = 'none';
+        currentSummary = [];
+    }
+</script>
+
+</body>
+</html>
