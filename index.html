@@ -146,9 +146,17 @@
             cursor: grab; 
             position: relative; 
         }
-        #resultTable th:first-child, #resultTable td:first-child { text-align: left; }
-        #resultTable th:last-child, #resultTable td:last-child { text-align: center; width: 70px; }
+        #resultTable th:first-child, #resultTable td:first-child { text-align: center; width: 50px; cursor: default; }
+        #resultTable th:nth-child(2), #resultTable td:nth-child(2) { text-align: left; }
+        #resultTable th:last-child, #resultTable td:last-child { text-align: center; width: 60px; }
         #resultTable tr:last-child td { border-bottom: none; }
+
+        /* 打勾與刪節線樣式 */
+        .check-cell { cursor: pointer !important; font-size: 22px; user-select: none; color: #cbd5e0; transition: color 0.2s; }
+        .row-checked { color: var(--gray-color) !important; }
+        .row-checked td { color: var(--gray-color) !important; }
+        .row-checked .check-cell { color: var(--success-color); }
+        .row-checked td:nth-child(2) { text-decoration: line-through; }
         
         /* --- 拖放狀態 --- */
         .dragging { opacity: 0.4; background-color: #f0f0f0; }
@@ -229,10 +237,8 @@
 </head>
 <body>
 
-<!-- 通知訊息 -->
 <div id="toast" class="msg-box"></div>
 
-<!-- 合併確認彈窗 -->
 <div id="mainModal" class="modal">
     <div class="modal-content">
         <p id="modalMsg" style="margin-top: 0;">訊息內容</p>
@@ -267,11 +273,11 @@
         <button class="clear-btn" onclick="clearContent()">🗑️ 清除</button>
     </div>
 
-    <!-- 結果顯示區 -->
     <div id="resultArea">
         <table id="resultTable">
             <thead>
                 <tr>
+                    <th>✔</th>
                     <th>品項與備註</th>
                     <th>數量</th>
                 </tr>
@@ -321,10 +327,8 @@
 
         lines.forEach(line => {
             let trimmed = line.trim();
-            // 基本過濾：空行或不含 '-' 符號的行不處理
             if (!trimmed || !trimmed.includes('-')) return;
             
-            // 移除 '=' 之後的內容（通常是金額計算）
             if (trimmed.includes('=')) trimmed = trimmed.split('=')[0].trim();
 
             const parts = trimmed.split('-');
@@ -333,19 +337,17 @@
             
             rawItems.forEach(rawItem => {
                 const subItem = rawItem.trim();
-                // Regex 說明：(品項名稱)(數字金額)元?
                 const match = subItem.match(/^(.*?)(\d+)\s*元?$/);
                 if (match) {
                     let detail = match[1].trim(); 
                     const price = parseInt(match[2], 10);
                     
-                    // 自動美化：在特定甜度冰塊關鍵字前補空格
                     detail = detail.replace(/([^\s])(無糖|微糖|一分糖|二分糖|三分糖|半糖|少糖|七分糖|去冰|微冰|少冰|多冰|正常|熱)/g, '$1 $2');
                     detail = detail.replace(/\s+/g, ' ').trim();
 
                     const key = `${detail}_${price}`;
                     if (!summaryObj[key]) {
-                        summaryObj[key] = { name: detail, qty: 0, price: price, isMinor: false };
+                        summaryObj[key] = { name: detail, qty: 0, price: price, isMinor: false, checked: false };
                     }
                     summaryObj[key].qty += 1;
                 }
@@ -354,7 +356,6 @@
 
         currentSummary = Object.values(summaryObj);
         checkMinorItems(); 
-        // 初始排序：依中文名稱
         currentSummary.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
         renderDisplay();
     }
@@ -375,7 +376,6 @@
         Object.keys(nameGroups).forEach(cleanName => {
             const group = nameGroups[cleanName];
             if (group.length > 1) {
-                // 排序：數量多者優先，其次價格低者為主要
                 group.sort((a, b) => (b.qty !== a.qty) ? (b.qty - a.qty) : (a.price - b.price));
                 for (let i = 1; i < group.length; i++) {
                     group[i].isMinor = true;
@@ -397,11 +397,17 @@
             const tr = document.createElement('tr');
             tr.draggable = true;
             tr.dataset.index = index;
+            if (item.checked) tr.classList.add('row-checked');
             
             const starHtml = item.isMinor ? '<span class="star-mark">*</span>' : '';
-            tr.innerHTML = `<td>${item.name}${starHtml}</td><td>${item.qty}</td>`;
+            const checkIcon = item.checked ? '☑' : '☐';
+
+            tr.innerHTML = `
+                <td class="check-cell" onclick="toggleCheck(${index}, event)">${checkIcon}</td>
+                <td>${item.name}${starHtml}</td>
+                <td>${item.qty}</td>
+            `;
             
-            // 綁定拖放事件
             tr.addEventListener('dragstart', handleDragStart);
             tr.addEventListener('dragover', handleDragOver);
             tr.addEventListener('dragleave', handleDragLeave);
@@ -416,6 +422,15 @@
         document.getElementById('totalQty').innerText = `${totalQty} 份`;
         document.getElementById('totalAmount').innerText = `$${totalAmount.toLocaleString()}`;
         document.getElementById('resultArea').style.display = 'block';
+    }
+
+    /**
+     * 切換核對狀態
+     */
+    function toggleCheck(index, event) {
+        event.stopPropagation();
+        currentSummary[index].checked = !currentSummary[index].checked;
+        renderDisplay();
     }
 
     // --- 拖放邏輯 (Drag & Drop) ---
@@ -437,7 +452,6 @@
 
         this.classList.remove('drop-before', 'drop-after', 'drop-merge');
 
-        // 判斷位置：上方30%為插入前方，下方30%為插入後方，中間40%為合併
         if (relY < height * 0.3) {
             this.classList.add('drop-before');
             dropAction = 'before';
@@ -466,10 +480,8 @@
         if (dropAction === 'merge') {
             triggerMerge(srcIdx, targetIdx);
         } else {
-            // 位移邏輯
             const item = currentSummary.splice(srcIdx, 1)[0];
             let newTarget = targetIdx;
-            // 修正位移後的 index 變化
             if (dropAction === 'after' && srcIdx < targetIdx) newTarget = targetIdx;
             else if (dropAction === 'before' && srcIdx > targetIdx) newTarget = targetIdx;
             
@@ -485,9 +497,6 @@
         });
     }
 
-    /**
-     * 處理品項合併
-     */
     function triggerMerge(srcIdx, targetIdx) {
         const src = currentSummary[srcIdx];
         const target = currentSummary[targetIdx];
@@ -522,9 +531,6 @@
         document.getElementById('modalNo').onclick = function() { modal.style.display = 'none'; };
     }
 
-    /**
-     * 複製統計結果到剪貼簿
-     */
     function copyResult() {
         if (currentSummary.length === 0) return;
         
@@ -549,9 +555,6 @@
         document.body.removeChild(el);
     }
 
-    /**
-     * 清除內容
-     */
     function clearContent() {
         document.getElementById('inputData').value = "";
         document.getElementById('resultArea').style.display = 'none';
