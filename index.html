@@ -73,6 +73,33 @@
             font-weight: bold; 
         }
 
+        /* --- 模式切換樣式 --- */
+        .mode-selector {
+            display: flex;
+            background: #eee;
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .mode-selector label {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .mode-selector input { display: none; }
+        .mode-selector input:checked + span {
+            background: white;
+            display: block;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
         /* --- 輸入區域 --- */
         textarea { 
             width: 100%; 
@@ -261,6 +288,17 @@
         <span>相同名稱但價格不同時會標註 *</span>
         <span><b>拖拉</b>品項可進行 <b>合併</b> 或 <b>排序</b></span>
     </div>
+
+    <div class="mode-selector">
+        <label>
+            <input type="radio" name="calcMode" value="split" checked>
+            <span>標準模式 (拆分 + 號)</span>
+        </label>
+        <label>
+            <input type="radio" name="calcMode" value="combo">
+            <span>套餐模式 (保留整行)</span>
+        </label>
+    </div>
     
     <textarea id="inputData" placeholder="請輸入訂單，例如：
 王小明-排骨飯 100
@@ -324,6 +362,9 @@
 
         const lines = input.split('\n');
         const summaryObj = {};
+        
+        // 獲取目前模式
+        const mode = document.querySelector('input[name="calcMode"]:checked').value;
 
         lines.forEach(line => {
             let trimmed = line.trim();
@@ -333,7 +374,9 @@
 
             const parts = trimmed.split('-');
             const content = parts.slice(1).join('-').trim();
-            const rawItems = content.split('+');
+            
+            // 判斷模式：套餐模式(combo)不拆分 + 號
+            const rawItems = (mode === 'combo') ? [content] : content.split('+');
             
             rawItems.forEach(rawItem => {
                 const subItem = rawItem.trim();
