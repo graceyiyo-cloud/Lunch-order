@@ -200,19 +200,29 @@
             border-bottom: 2px solid #eee; 
         }
         #resultTable td { 
-            padding: 10px 12px; 
+            padding: 12px 12px; 
             border-bottom: 1px solid #f1f1f1; 
             color: var(--text-color); 
             cursor: grab; 
-            position: relative; 
+            position: relative;
+            vertical-align: top; /* 修正：讓內容靠上對齊，避免長文字造成圖示錯位 */
         }
-        #resultTable th:first-child, #resultTable td:first-child { text-align: center; width: 50px; cursor: default; }
+        #resultTable th:first-child, #resultTable td:first-child { text-align: center; width: 44px; cursor: default; }
         #resultTable th:nth-child(2), #resultTable td:nth-child(2) { text-align: left; }
         #resultTable th:last-child, #resultTable td:last-child { text-align: center; width: 60px; }
         #resultTable tr:last-child td { border-bottom: none; }
 
-        /* 核對欄位樣式調整 */
-        .check-cell { cursor: pointer !important; user-select: none; color: #cbd5e0; transition: color 0.2s; display: flex; align-items: center; justify-content: center; height: 100%; min-height: 24px; padding: 10px 0 !important; }
+        /* 核對欄位樣式修正 */
+        .check-cell { 
+            cursor: pointer !important; 
+            user-select: none; 
+            color: #cbd5e0; 
+            transition: color 0.2s; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            padding-top: 2px !important; /* 微調圖示高度，使其與第一行文字視覺中心對齊 */
+        }
         .row-checked { color: var(--gray-color) !important; }
         .row-checked td { color: var(--gray-color) !important; }
         .row-checked .check-cell { color: var(--success-color); }
@@ -351,7 +361,7 @@
         <table id="resultTable">
             <thead>
                 <tr>
-                    <th style="width: 50px;"><i data-lucide="check-square"></i></th>
+                    <th style="width: 44px;"><i data-lucide="check-square"></i></th>
                     <th>品項與備註</th>
                     <th>數量</th>
                 </tr>
@@ -489,7 +499,7 @@
             tr.innerHTML = `
                 <td class="check-cell" onclick="toggleCheck(${index}, event)"><i data-lucide="${checkIconName}"></i></td>
                 <td>${item.name}${starHtml}</td>
-                <td>${item.qty}</td>
+                <td style="vertical-align: top; padding-top: 12px;">${item.qty}</td>
             `;
             
             tr.addEventListener('dragstart', handleDragStart);
