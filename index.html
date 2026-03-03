@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>訂單金額統計助手 - 整理優化版</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         /* --- 變數定義 --- */
         :root {
@@ -49,6 +50,13 @@
             justify-content: center; 
             gap: 10px; 
             font-size: 1.4rem;
+        }
+        
+        /* 統一圖示大小 */
+        .lucide {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2px;
         }
 
         /* --- 提示區域 --- */
@@ -138,7 +146,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 6px;
         }
         .process-btn { background-color: var(--primary-color); color: white; }
         .process-btn:hover { background-color: var(--primary-hover); }
@@ -150,6 +158,31 @@
         /* --- 結果表格 --- */
         #resultArea { margin-top: 20px; display: none; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 重設勾選專用樣式 */
+        .table-header-tools {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 8px;
+        }
+        .reset-check-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 12px;
+            cursor: pointer;
+            padding: 0;
+            min-width: auto;
+            text-decoration: underline;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .reset-check-btn:hover {
+            color: var(--primary-hover);
+            background: none;
+        }
+        .reset-check-btn .lucide { width: 14px; height: 14px; }
 
         #resultTable { 
             width: 100%; 
@@ -178,8 +211,8 @@
         #resultTable th:last-child, #resultTable td:last-child { text-align: center; width: 60px; }
         #resultTable tr:last-child td { border-bottom: none; }
 
-        /* 打勾與刪節線樣式 */
-        .check-cell { cursor: pointer !important; font-size: 22px; user-select: none; color: #cbd5e0; transition: color 0.2s; }
+        /* 核對欄位樣式調整 */
+        .check-cell { cursor: pointer !important; user-select: none; color: #cbd5e0; transition: color 0.2s; display: flex; align-items: center; justify-content: center; height: 100%; min-height: 24px; padding: 10px 0 !important; }
         .row-checked { color: var(--gray-color) !important; }
         .row-checked td { color: var(--gray-color) !important; }
         .row-checked .check-cell { color: var(--success-color); }
@@ -281,7 +314,7 @@
 </div>
 
 <div class="container">
-    <h2>🍱 訂單明細統計助手 🍱</h2>
+    <h2><i data-lucide="clipboard-list"></i> 訂單明細統計助手 <i data-lucide="clipboard-list"></i></h2>
     
     <div class="hint">
         <span>格式：姓名-餐點 價格 (支援「元」字)</span>
@@ -306,16 +339,19 @@
 張阿三-雞腿飯 110+大冰紅 30元"></textarea>
     
     <div class="btn-group">
-        <button class="process-btn" onclick="processOrder()">🚀 開始統計</button>
-        <button class="copy-btn" onclick="copyResult()">📋 複製結果</button>
-        <button class="clear-btn" onclick="clearContent()">🗑️ 清除</button>
+        <button class="process-btn" onclick="processOrder()"><i data-lucide="rocket"></i> 開始統計</button>
+        <button class="copy-btn" onclick="copyResult()"><i data-lucide="copy"></i> 複製結果</button>
+        <button class="clear-btn" onclick="clearContent()"><i data-lucide="trash-2"></i> 清除</button>
     </div>
 
     <div id="resultArea">
+        <div class="table-header-tools">
+            <button class="reset-check-btn" onclick="resetAllChecks()"><i data-lucide="refresh-cw"></i> 重設所有勾選</button>
+        </div>
         <table id="resultTable">
             <thead>
                 <tr>
-                    <th>✔</th>
+                    <th style="width: 50px;"><i data-lucide="check-square"></i></th>
                     <th>品項與備註</th>
                     <th>數量</th>
                 </tr>
@@ -337,6 +373,11 @@
 </div>
 
 <script>
+    // 初始化 Lucide 圖示
+    function initIcons() {
+        lucide.createIcons();
+    }
+    
     // --- 全域狀態 ---
     let currentSummary = []; 
     let dragSrcIdx = null;
@@ -443,10 +484,10 @@
             if (item.checked) tr.classList.add('row-checked');
             
             const starHtml = item.isMinor ? '<span class="star-mark">*</span>' : '';
-            const checkIcon = item.checked ? '☑' : '☐';
+            const checkIconName = item.checked ? 'check-square' : 'square';
 
             tr.innerHTML = `
-                <td class="check-cell" onclick="toggleCheck(${index}, event)">${checkIcon}</td>
+                <td class="check-cell" onclick="toggleCheck(${index}, event)"><i data-lucide="${checkIconName}"></i></td>
                 <td>${item.name}${starHtml}</td>
                 <td>${item.qty}</td>
             `;
@@ -465,6 +506,8 @@
         document.getElementById('totalQty').innerText = `${totalQty} 份`;
         document.getElementById('totalAmount').innerText = `$${totalAmount.toLocaleString()}`;
         document.getElementById('resultArea').style.display = 'block';
+        
+        initIcons(); // 每次渲染後重新初始化圖示
     }
 
     /**
@@ -474,6 +517,15 @@
         event.stopPropagation();
         currentSummary[index].checked = !currentSummary[index].checked;
         renderDisplay();
+    }
+
+    /**
+     * 重設所有勾選狀態
+     */
+    function resetAllChecks() {
+        currentSummary.forEach(item => item.checked = false);
+        renderDisplay();
+        showMessage("已重設所有勾選狀態");
     }
 
     // --- 拖放邏輯 (Drag & Drop) ---
@@ -603,6 +655,9 @@
         document.getElementById('resultArea').style.display = 'none';
         currentSummary = [];
     }
+
+    // 初始化頁面圖示
+    window.onload = initIcons;
 </script>
 
 </body>
