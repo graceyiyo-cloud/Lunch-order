@@ -28,7 +28,7 @@
         body { 
             font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; 
             max-width: 488px; 
-            margin: 10px auto; /* 減少上方空白 */
+            margin: 10px auto; 
             padding: 15px; 
             line-height: 1.6; 
             background-color: var(--bg-color); 
@@ -63,7 +63,6 @@
             font-weight: 800;
         }
         
-        /* 幫助按鈕樣式 */
         .help-toggle-btn {
             background: none;
             border: none;
@@ -85,7 +84,6 @@
             color: var(--primary-color);
         }
 
-        /* 統一圖示大小 */
         .lucide {
             width: 20px;
             height: 20px;
@@ -203,39 +201,78 @@
         .clear-btn { background-color: var(--gray-color); color: white; }
         .clear-btn:hover { background-color: var(--gray-hover); transform: translateY(-2px); }
 
-        /* --- 結果表格 --- */
+        /* --- 結果區域與分類標題 --- */
         #resultArea { margin-top: 25px; display: none; animation: fadeIn 0.6s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        .category-block { margin-bottom: 35px; }
+        .category-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--primary-color);
+            background: #f1f4f3;
+            padding: 4px 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .table-header-tools {
             display: flex;
-            justify-content: flex-end;
-            margin-bottom: 10px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            gap: 10px;
         }
+
+        /* 迷你模式切換按鈕 */
+        .cat-mode-switch {
+            display: flex;
+            background: #dfe4e2;
+            padding: 2px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+        .cat-mode-switch label {
+            padding: 2px 8px;
+            cursor: pointer;
+            border-radius: 18px;
+            color: #718096;
+            transition: all 0.2s;
+        }
+        .cat-mode-switch input { display: none; }
+        .cat-mode-switch input:checked + span {
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 18px;
+            display: block;
+            font-weight: bold;
+        }
+
         .reset-check-btn {
             background: none;
             border: none;
             color: var(--primary-color);
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
-            padding: 5px 8px;
+            padding: 2px 5px;
             min-width: auto;
             display: flex;
             align-items: center;
             gap: 4px;
-            border-radius: 6px;
+            border-radius: 4px;
             font-weight: 600;
         }
-        .reset-check-btn:hover {
-            color: var(--primary-hover);
-            background: rgba(58, 99, 81, 0.08);
-        }
+        .reset-check-btn:hover { background: rgba(58, 99, 81, 0.08); }
 
-        #resultTable { 
+        .result-table { 
             width: 100%; 
             border-collapse: separate; 
             border-spacing: 0;
-            margin-bottom: 20px; 
+            margin-bottom: 15px; 
             background: #fff; 
             border-radius: 12px;
             overflow: hidden;
@@ -243,15 +280,15 @@
             table-layout: fixed;
             border: 1px solid var(--border-color);
         }
-        #resultTable th { 
+        .result-table th { 
             background-color: #f1f4f3; 
             color: #4a5568; 
-            padding: 8px; /* 再窄一點：進一步壓縮內距 */
+            padding: 8px; 
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
         }
-        #resultTable td { 
-            padding: 6px 8px; /* 再窄一點：極致壓縮上下間距 */
+        .result-table td { 
+            padding: 6px 8px; 
             border-bottom: 1px solid #edf2f0; 
             color: var(--text-color); 
             cursor: grab; 
@@ -261,55 +298,47 @@
             transition: background 0.2s;
         }
 
-        /* 欄位寬度 */
-        #resultTable th:nth-child(1), #resultTable td:nth-child(1) { width: 45px; text-align: center; }
-        #resultTable th:nth-child(2), #resultTable td:nth-child(2) { text-align: left; }
-        #resultTable th:nth-child(3), #resultTable td:nth-child(3) { width: 55px; text-align: center; font-weight: 800; }
+        .result-table th:nth-child(1), .result-table td:nth-child(1) { width: 45px; text-align: center; }
+        .result-table th:nth-child(2), .result-table td:nth-child(2) { text-align: left; }
+        .result-table th:nth-child(3), .result-table td:nth-child(3) { width: 55px; text-align: center; font-weight: 800; }
 
-        /* --- 勾選欄位核心 --- */
         .check-cell { 
             cursor: pointer !important; 
             user-select: none; 
             color: #cbd5e0; 
-            transition: all 0.2s; 
             display: flex !important;
             align-items: center; 
             justify-content: center; 
-            min-height: 24px; /* 再窄一點：更小的高度確保列高極簡 */
-            height: 100%;
+            min-height: 24px;
         }
         .row-checked { background-color: #f7f9f8 !important; }
         .row-checked td { color: #a0aec0 !important; }
         .row-checked .check-cell { color: var(--success-color); }
         .row-checked td:nth-child(2) { text-decoration: line-through; opacity: 0.7; }
 
-        /* --- 拖放狀態修正 --- */
         .dragging { opacity: 0.5; background-color: #edf2f1; }
         .drop-merge { background-color: #fffaf0 !important; outline: 2px solid #ed8936; z-index: 10; }
-        
-        /* 排序指示線：作用在 td 上 */
         .drop-before td { border-top: 4px solid var(--primary-color) !important; }
         .drop-after td { border-bottom: 4px solid var(--primary-color) !important; }
 
-        /* --- 統計區塊 --- */
         .summary-box { 
             background: #f8faf9; 
             border: 1px solid #dce4e1;
             border-left: 6px solid var(--primary-color); 
-            padding: 18px; 
-            border-radius: 12px; 
+            padding: 12px 15px; 
+            border-radius: 10px; 
+            margin-top: 10px;
         }
         .summary-line { 
             display: flex; 
             justify-content: space-between; 
-            font-size: 15px; 
+            font-size: 14px; 
             font-weight: 700; 
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             color: #4a5568;
         }
-        .total-price { color: var(--danger-color); font-size: 22px; font-weight: 900; }
+        .total-price { color: var(--danger-color); font-size: 18px; font-weight: 900; }
 
-        /* --- 彈窗與訊息 --- */
         .modal { 
             display: none; 
             position: fixed; 
@@ -355,11 +384,7 @@
             box-shadow: 0 8px 16px rgba(0,0,0,0.2);
         }
 
-        .star-mark { 
-            color: var(--danger-color); 
-            font-weight: bold; 
-            margin-left: 5px; 
-        }
+        .star-mark { color: var(--danger-color); font-weight: bold; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -390,25 +415,22 @@
 
     <div class="hint" id="hintBox">
         <span>格式：姓名-餐點 價格 (支援「元」字)</span>
-        <span>相同名稱但價格不同時會標註 *</span>
+        <span>可針對不同分類切換「標準」或「套餐」模式</span>
         <span><b>拖拉</b>品項可進行 <b>合併</b> 或 <b>排序</b></span>
     </div>
 
     <div class="mode-selector">
         <label>
             <input type="radio" name="calcMode" value="split" checked>
-            <span>標準模式 (拆分 + 號)</span>
+            <span>預設標準模式 (拆分 + 號)</span>
         </label>
         <label>
             <input type="radio" name="calcMode" value="combo">
-            <span>套餐模式 (保留整行)</span>
+            <span>預設套餐模式 (保留整行)</span>
         </label>
     </div>
 
-    <textarea id="inputData" placeholder="請輸入訂單，例如：
-王小明-排骨飯 100
-李大華-排骨飯 120元
-張阿三-雞腿飯 110+大冰紅 30元"></textarea>
+    <textarea id="inputData" placeholder="請輸入訂單內容..."></textarea>
 
     <div class="btn-group">
         <button class="process-btn" onclick="processOrder()"><i data-lucide="rocket"></i> 開始統計</button>
@@ -417,30 +439,7 @@
     </div>
 
     <div id="resultArea">
-        <div class="table-header-tools">
-            <button class="reset-check-btn" onclick="resetAllChecks()"><i data-lucide="refresh-cw"></i> 重設勾選</button>
-        </div>
-        <table id="resultTable">
-            <thead>
-                <tr>
-                    <th><i data-lucide="check-circle"></i></th>
-                    <th>品項與備註</th>
-                    <th>數量</th>
-                </tr>
-            </thead>
-            <tbody id="resultBody"></tbody>
-        </table>
-
-        <div class="summary-box">
-            <div class="summary-line">
-                <span>總份數</span>
-                <span id="totalQty">0 份</span>
-            </div>
-            <div class="summary-line" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e0;">
-                <span>應收總金額</span>
-                <span id="totalAmount" class="total-price">$0</span>
-            </div>
-        </div>
+        <div id="categoryContainer"></div>
     </div>
 </div>
 
@@ -449,9 +448,9 @@
         lucide.createIcons();
     }
     
-    let currentSummary = []; 
-    let dragSrcIdx = null;
-    let currentDropTargetIdx = null;
+    let categoryData = []; 
+    let dragSrcInfo = null;
+    let currentDropTargetInfo = null;
     let dropAction = null; 
 
     function showMessage(text) {
@@ -465,27 +464,14 @@
         const hintBox = document.getElementById('hintBox');
         const btn = document.querySelector('.help-toggle-btn');
         const isHidden = window.getComputedStyle(hintBox).display === 'none';
-        
-        if (isHidden) {
-            hintBox.style.display = 'block';
-            btn.classList.add('active');
-        } else {
-            hintBox.style.display = 'none';
-            btn.classList.remove('active');
-        }
+        hintBox.style.display = isHidden ? 'block' : 'none';
+        isHidden ? btn.classList.add('active') : btn.classList.remove('active');
     }
 
-    function processOrder() {
-        const input = document.getElementById('inputData').value.trim();
-        if (!input) return;
-
-        const lines = input.split('\n');
+    function parseLinesToItems(lines, mode) {
         const summaryObj = {};
-        const mode = document.querySelector('input[name="calcMode"]:checked').value;
-
         lines.forEach(line => {
             let trimmed = line.trim();
-            if (!trimmed || !trimmed.includes('-')) return;
             if (trimmed.includes('=')) trimmed = trimmed.split('=')[0].trim();
             const parts = trimmed.split('-');
             const content = parts.slice(1).join('-').trim();
@@ -497,8 +483,7 @@
                 if (match) {
                     let detail = match[1].trim(); 
                     const price = parseInt(match[2], 10);
-                    detail = detail.replace(/([^\s])(無糖|微糖|一分糖|二分糖|三分糖|半糖|少糖|七分糖|去冰|微冰|少冰|多冰|正常|熱)/g, '$1 $2');
-                    detail = detail.replace(/\s+/g, ' ').trim();
+                    detail = detail.replace(/([^\s])(無糖|微糖|一分糖|二分糖|三分糖|半糖|少糖|七分糖|去冰|微冰|少冰|多冰|正常|熱)/g, '$1 $2').replace(/\s+/g, ' ').trim();
                     const key = `${detail}_${price}`;
                     if (!summaryObj[key]) {
                         summaryObj[key] = { name: detail, qty: 0, price: price, isMinor: false, checked: false };
@@ -507,175 +492,255 @@
                 }
             });
         });
+        const items = Object.values(summaryObj);
+        items.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+        return items;
+    }
 
-        currentSummary = Object.values(summaryObj);
-        checkMinorItems(); 
-        currentSummary.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+    function processOrder() {
+        const input = document.getElementById('inputData').value.trim();
+        if (!input) return;
+
+        const lines = input.split('\n');
+        const defaultMode = document.querySelector('input[name="calcMode"]:checked').value;
+        const tempCategoryMap = new Map();
+        
+        let currentCatName = "一般品項";
+
+        lines.forEach(line => {
+            let trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith('---')) return;
+
+            if (!trimmed.includes('-')) {
+                if (trimmed.match(/^\d+[fF樓]$/) || trimmed.length <= 1) return;
+                if (trimmed.includes('結單')) return;
+                currentCatName = trimmed;
+                return;
+            }
+
+            if (!tempCategoryMap.has(currentCatName)) {
+                tempCategoryMap.set(currentCatName, []);
+            }
+            tempCategoryMap.get(currentCatName).push(trimmed);
+        });
+
+        categoryData = Array.from(tempCategoryMap).map(([name, rawLines]) => {
+            const items = parseLinesToItems(rawLines, defaultMode);
+            return { catName: name, mode: defaultMode, rawLines, items };
+        });
+
+        checkAllMinorItems();
         renderDisplay();
     }
 
-    function checkMinorItems() {
-        currentSummary.forEach(item => item.isMinor = false);
-        const nameGroups = {};
-        currentSummary.forEach(item => {
-            const cleanName = item.name.replace(/\s+/g, ''); 
-            if (!nameGroups[cleanName]) nameGroups[cleanName] = [];
-            nameGroups[cleanName].push(item);
-        });
-        Object.keys(nameGroups).forEach(cleanName => {
-            const group = nameGroups[cleanName];
-            if (group.length > 1) {
-                group.sort((a, b) => (b.qty !== a.qty) ? (b.qty - a.qty) : (a.price - b.price));
-                for (let i = 1; i < group.length; i++) group[i].isMinor = true;
-            }
+    function changeCatMode(catIdx, newMode) {
+        const cat = categoryData[catIdx];
+        cat.mode = newMode;
+        cat.items = parseLinesToItems(cat.rawLines, newMode);
+        checkAllMinorItems();
+        renderDisplay();
+        showMessage(`「${cat.catName}」已切換模式`);
+    }
+
+    function checkAllMinorItems() {
+        categoryData.forEach(cat => {
+            cat.items.forEach(item => item.isMinor = false);
+            const nameGroups = {};
+            cat.items.forEach(item => {
+                const cleanName = item.name.replace(/\s+/g, ''); 
+                if (!nameGroups[cleanName]) nameGroups[cleanName] = [];
+                nameGroups[cleanName].push(item);
+            });
+            Object.values(nameGroups).forEach(group => {
+                if (group.length > 1) {
+                    group.sort((a, b) => (b.qty !== a.qty) ? (b.qty - a.qty) : (a.price - b.price));
+                    for (let i = 1; i < group.length; i++) group[i].isMinor = true;
+                }
+            });
         });
     }
 
     function renderDisplay() {
-        const tbody = document.getElementById('resultBody');
-        tbody.innerHTML = "";
-        let totalQty = 0;
-        let totalAmount = 0;
+        const container = document.getElementById('categoryContainer');
+        container.innerHTML = "";
 
-        currentSummary.forEach((item, index) => {
-            const tr = document.createElement('tr');
-            tr.draggable = true;
-            tr.dataset.index = index;
-            if (item.checked) tr.classList.add('row-checked');
-
-            const starHtml = item.isMinor ? '<span class="star-mark">*</span>' : '';
-            const checkIconName = item.checked ? 'check-circle' : 'circle';
-
-            tr.innerHTML = `
-                <td><div class="check-cell" onclick="toggleCheck(${index}, event)"><i data-lucide="${checkIconName}"></i></div></td>
-                <td>${item.name}${starHtml}</td>
-                <td>${item.qty}</td>
+        categoryData.forEach((cat, catIdx) => {
+            let catQty = 0;
+            let catAmount = 0;
+            
+            const block = document.createElement('div');
+            block.className = "category-block";
+            
+            block.innerHTML = `
+                <div class="category-title"><i data-lucide="tag"></i> ${cat.catName}</div>
+                <div class="table-header-tools">
+                    <div class="cat-mode-switch">
+                        <label onclick="changeCatMode(${catIdx}, 'split')">
+                            <input type="radio" name="m-${catIdx}" ${cat.mode === 'split' ? 'checked' : ''}>
+                            <span>標準</span>
+                        </label>
+                        <label onclick="changeCatMode(${catIdx}, 'combo')">
+                            <input type="radio" name="m-${catIdx}" ${cat.mode === 'combo' ? 'checked' : ''}>
+                            <span>套餐</span>
+                        </label>
+                    </div>
+                    <button class="reset-check-btn" onclick="resetCatChecks(${catIdx})"><i data-lucide="refresh-cw"></i> 重設勾選</button>
+                </div>
+                <table class="result-table">
+                    <thead><tr><th><i data-lucide="check-circle"></i></th><th>品項與備註</th><th>數量</th></tr></thead>
+                    <tbody id="tbody-${catIdx}"></tbody>
+                </table>
+                <div class="summary-box">
+                    <div class="summary-line"><span>份數統計</span><span id="qty-${catIdx}">0 份</span></div>
+                    <div class="summary-line" style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed #cbd5e0;">
+                        <span>分類金額</span><span id="amt-${catIdx}" class="total-price">$0</span>
+                    </div>
+                </div>
             `;
 
-            tr.addEventListener('dragstart', handleDragStart);
-            tr.addEventListener('dragover', handleDragOver);
-            tr.addEventListener('dragleave', handleDragLeave);
-            tr.addEventListener('drop', handleDrop);
-            tr.addEventListener('dragend', handleDragEnd);
+            const tbody = block.querySelector(`#tbody-${catIdx}`);
+            cat.items.forEach((item, itemIdx) => {
+                const tr = document.createElement('tr');
+                tr.draggable = true;
+                tr.dataset.catIdx = catIdx;
+                tr.dataset.itemIdx = itemIdx;
+                if (item.checked) tr.classList.add('row-checked');
 
-            tbody.appendChild(tr);
-            totalQty += item.qty;
-            totalAmount += (item.qty * item.price);
+                const starHtml = item.isMinor ? '<span class="star-mark">*</span>' : '';
+                const checkIconName = item.checked ? 'check-circle' : 'circle';
+
+                tr.innerHTML = `
+                    <td><div class="check-cell" onclick="toggleCheck(${catIdx}, ${itemIdx}, event)"><i data-lucide="${checkIconName}"></i></div></td>
+                    <td>${item.name}${starHtml}</td>
+                    <td>${item.qty}</td>
+                `;
+
+                tr.addEventListener('dragstart', handleDragStart);
+                tr.addEventListener('dragover', handleDragOver);
+                tr.addEventListener('dragleave', handleDragLeave);
+                tr.addEventListener('drop', handleDrop);
+                tr.addEventListener('dragend', handleDragEnd);
+
+                tbody.appendChild(tr);
+                catQty += item.qty;
+                catAmount += (item.qty * item.price);
+            });
+
+            block.querySelector(`#qty-${catIdx}`).innerText = `${catQty} 份`;
+            block.querySelector(`#amt-${catIdx}`).innerText = `$${catAmount.toLocaleString()}`;
+            container.appendChild(block);
         });
 
-        document.getElementById('totalQty').innerText = `${totalQty} 份`;
-        document.getElementById('totalAmount').innerText = `$${totalAmount.toLocaleString()}`;
         document.getElementById('resultArea').style.display = 'block';
         initIcons();
     }
 
-    function toggleCheck(index, event) {
+    function toggleCheck(catIdx, itemIdx, event) {
         event.stopPropagation();
-        currentSummary[index].checked = !currentSummary[index].checked;
+        categoryData[catIdx].items[itemIdx].checked = !categoryData[catIdx].items[itemIdx].checked;
         renderDisplay();
     }
 
-    function resetAllChecks() {
-        currentSummary.forEach(item => item.checked = false);
+    function resetCatChecks(catIdx) {
+        categoryData[catIdx].items.forEach(item => item.checked = false);
         renderDisplay();
-        showMessage("已重設所有勾選狀態");
     }
 
     function handleDragStart(e) {
-        dragSrcIdx = parseInt(this.dataset.index);
+        dragSrcInfo = { catIdx: parseInt(this.dataset.catIdx), itemIdx: parseInt(this.dataset.itemIdx) };
         this.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
     }
 
     function handleDragOver(e) {
-        if (e.preventDefault) e.preventDefault();
-        const targetIdx = parseInt(this.dataset.index);
-        if (dragSrcIdx === targetIdx) return false;
+        e.preventDefault();
+        const targetCatIdx = parseInt(this.dataset.catIdx);
+        const targetItemIdx = parseInt(this.dataset.itemIdx);
+        if (targetCatIdx !== dragSrcInfo.catIdx) return;
         const rect = this.getBoundingClientRect();
         const relY = e.clientY - rect.top;
-        const height = rect.height;
         this.classList.remove('drop-before', 'drop-after', 'drop-merge');
-        if (relY < height * 0.3) {
+        if (relY < rect.height * 0.3) {
             this.classList.add('drop-before');
             dropAction = 'before';
-        } else if (relY > height * 0.7) {
+        } else if (relY > rect.height * 0.7) {
             this.classList.add('drop-after');
             dropAction = 'after';
         } else {
             this.classList.add('drop-merge');
             dropAction = 'merge';
         }
-        currentDropTargetIdx = targetIdx;
-        return false;
+        currentDropTargetInfo = { catIdx: targetCatIdx, itemIdx: targetItemIdx };
     }
 
-    function handleDragLeave() {
-        this.classList.remove('drop-before', 'drop-after', 'drop-merge');
-    }
+    function handleDragLeave() { this.classList.remove('drop-before', 'drop-after', 'drop-merge'); }
 
     function handleDrop(e) {
-        if (e.stopPropagation) e.stopPropagation();
-        const targetIdx = currentDropTargetIdx;
-        const srcIdx = dragSrcIdx;
-        if (srcIdx === null || targetIdx === null || srcIdx === targetIdx) return;
+        e.stopPropagation();
+        if (!currentDropTargetInfo || dragSrcInfo.catIdx !== currentDropTargetInfo.catIdx) return;
+        const cat = categoryData[dragSrcInfo.catIdx];
         if (dropAction === 'merge') {
-            triggerMerge(srcIdx, targetIdx);
+            triggerMerge(dragSrcInfo, currentDropTargetInfo);
         } else {
-            const item = currentSummary.splice(srcIdx, 1)[0];
-            let newTarget = targetIdx;
-            if (dropAction === 'after' && srcIdx < targetIdx) newTarget = targetIdx;
-            else if (dropAction === 'before' && srcIdx > targetIdx) newTarget = targetIdx;
-            currentSummary.splice(newTarget, 0, item);
+            const item = cat.items.splice(dragSrcInfo.itemIdx, 1)[0];
+            cat.items.splice(currentDropTargetInfo.itemIdx, 0, item);
             renderDisplay();
         }
     }
 
     function handleDragEnd() {
-        this.classList.remove('dragging');
-        document.querySelectorAll('#resultTable tr').forEach(row => {
-            row.classList.remove('drop-before', 'drop-after', 'drop-merge');
-        });
+        document.querySelectorAll('.result-table tr').forEach(row => row.classList.remove('dragging', 'drop-before', 'drop-after', 'drop-merge'));
     }
 
-    function triggerMerge(srcIdx, targetIdx) {
-        const src = currentSummary[srcIdx];
-        const target = currentSummary[targetIdx];
+    function triggerMerge(src, target) {
+        const cat = categoryData[src.catIdx];
+        const srcItem = cat.items[src.itemIdx];
+        const targetItem = cat.items[target.itemIdx];
         const modal = document.getElementById('mainModal');
-        const modalMsg = document.getElementById('modalMsg');
         const priceArea = document.getElementById('priceInputArea');
         const priceInput = document.getElementById('customPrice');
-        priceArea.style.display = 'none';
-        if (src.price !== target.price) {
-            modalMsg.innerHTML = `⚠️ 兩品項單價不同！<br><span style="font-size:13px; color:var(--danger-color);">${src.name} ($${src.price})<br>${target.name} ($${target.price})</span><br><br>合併後要使用哪個金額？`;
-            priceArea.style.display = 'block';
-            priceInput.value = target.price;
+        priceArea.style.display = (srcItem.price !== targetItem.price) ? 'block' : 'none';
+        if (srcItem.price !== targetItem.price) {
+            document.getElementById('modalMsg').innerHTML = `⚠️ 單價不同！使用哪個金額？<br><small>${srcItem.name}($${srcItem.price}) / ${targetItem.name}($${targetItem.price})</small>`;
+            priceInput.value = targetItem.price;
         } else {
-            modalMsg.innerText = `將「${src.name}」合併至「${target.name}」？`;
+            document.getElementById('modalMsg').innerText = `將「${srcItem.name}」併入「${targetItem.name}」？`;
         }
         modal.style.display = 'flex';
-        document.getElementById('modalYes').onclick = function() {
-            if (src.price !== target.price) target.price = parseInt(priceInput.value) || target.price;
-            target.qty += src.qty;
-            currentSummary.splice(srcIdx, 1);
-            checkMinorItems(); 
+        document.getElementById('modalYes').onclick = () => {
+            if (srcItem.price !== targetItem.price) targetItem.price = parseInt(priceInput.value) || targetItem.price;
+            targetItem.qty += srcItem.qty;
+            cat.items.splice(src.itemIdx, 1);
+            checkAllMinorItems();
             modal.style.display = 'none';
             renderDisplay();
             showMessage("品項已合併");
         };
-        document.getElementById('modalNo').onclick = function() { modal.style.display = 'none'; };
+        document.getElementById('modalNo').onclick = () => modal.style.display = 'none';
     }
 
     function copyResult() {
-        if (currentSummary.length === 0) return;
-        let copyText = "【訂單統計結果】\n";
-        currentSummary.forEach(item => {
-            const starText = item.isMinor ? "*" : "";
-            copyText += `${item.name}${starText} * ${item.qty}\n`;
+        if (categoryData.length === 0) return;
+        let blocks = [];
+        categoryData.forEach(cat => {
+            let catQty = 0;
+            let catAmount = 0;
+            let itemLines = [];
+            cat.items.forEach(item => {
+                const starText = item.isMinor ? "*" : "";
+                itemLines.push(`${item.name}${starText} * ${item.qty}`);
+                catQty += item.qty;
+                catAmount += (item.qty * item.price);
+            });
+            let blockText = itemLines.join('\n');
+            blockText += `\n\n份數：${catQty} 份\n金額：$${catAmount.toLocaleString()}`;
+            blocks.push(blockText);
         });
-        copyText += `\n總份數：${document.getElementById('totalQty').innerText}\n`;
-        copyText += `總金額：${document.getElementById('totalAmount').innerText}`;
+        
+        // 使用虛線分隔不同分類
+        const finalCopyText = blocks.join('\n\n----------------\n\n');
+        
         const el = document.createElement('textarea');
-        el.value = copyText;
+        el.value = finalCopyText;
         document.body.appendChild(el); 
         el.select();
         try {
@@ -690,7 +755,7 @@
     function clearContent() {
         document.getElementById('inputData').value = "";
         document.getElementById('resultArea').style.display = 'none';
-        currentSummary = [];
+        categoryData = [];
     }
 
     window.onload = initIcons;
