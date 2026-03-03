@@ -414,19 +414,21 @@
     </div>
 
     <div class="hint" id="hintBox">
-        <span>格式：姓名-餐點 價格 (支援「元」字)</span>
-        <span>可針對不同分類切換「標準」或「套餐」模式</span>
-        <span><b>拖拉</b>品項可進行 <b>合併</b> 或 <b>排序</b></span>
+        <span><b>標準模式：</b>自動拆分「+」號，將複數品項分開統計。</span>
+        <span><b>套餐模式：</b>完整保留整行品項名稱（不拆分）。</span>
+        <span><b>分區統計：</b>支援同時貼入午餐、飲料等分類，系統將自動分區統計。</span>
+        <span><b>格式範例：</b>姓名-餐點 價格 (支援元字)。</span>
+        <span><b>互動操作：</b>可針對各分類獨立切換模式，拖拉品項可合併或排序。</span>
     </div>
 
     <div class="mode-selector">
         <label>
             <input type="radio" name="calcMode" value="split" checked>
-            <span>預設標準模式 (拆分 + 號)</span>
+            <span>標準模式</span>
         </label>
         <label>
             <input type="radio" name="calcMode" value="combo">
-            <span>預設套餐模式 (保留整行)</span>
+            <span>套餐模式</span>
         </label>
     </div>
 
@@ -736,7 +738,6 @@
             blocks.push(blockText);
         });
         
-        // 使用虛線分隔不同分類
         const finalCopyText = blocks.join('\n\n----------------\n\n');
         
         const el = document.createElement('textarea');
