@@ -205,24 +205,26 @@
             color: var(--text-color); 
             cursor: grab; 
             position: relative;
-            vertical-align: top; /* 修正：讓內容靠上對齊，避免長文字造成圖示錯位 */
+            vertical-align: top;
         }
         #resultTable th:first-child, #resultTable td:first-child { text-align: center; width: 44px; cursor: default; }
         #resultTable th:nth-child(2), #resultTable td:nth-child(2) { text-align: left; }
         #resultTable th:last-child, #resultTable td:last-child { text-align: center; width: 60px; }
         #resultTable tr:last-child td { border-bottom: none; }
 
-        /* 核對欄位樣式修正 */
+        /* --- 關鍵修正：勾選欄位改用高度與對齊優化 --- */
         .check-cell { 
             cursor: pointer !important; 
             user-select: none; 
             color: #cbd5e0; 
             transition: color 0.2s; 
-            display: flex; 
-            align-items: center; 
+            /* 讓內容垂直靠上，並手動給予與品項文字相同的 padding-top */
+            padding-top: 14px !important;
+            display: flex;
             justify-content: center;
-            padding-top: 2px !important; /* 微調圖示高度，使其與第一行文字視覺中心對齊 */
+            align-items: flex-start;
         }
+        
         .row-checked { color: var(--gray-color) !important; }
         .row-checked td { color: var(--gray-color) !important; }
         .row-checked .check-cell { color: var(--success-color); }
@@ -497,9 +499,11 @@
             const checkIconName = item.checked ? 'check-square' : 'square';
 
             tr.innerHTML = `
-                <td class="check-cell" onclick="toggleCheck(${index}, event)"><i data-lucide="${checkIconName}"></i></td>
-                <td>${item.name}${starHtml}</td>
-                <td style="vertical-align: top; padding-top: 12px;">${item.qty}</td>
+                <td class="check-cell" onclick="toggleCheck(${index}, event)">
+                    <i data-lucide="${checkIconName}"></i>
+                </td>
+                <td style="padding: 12px 12px;">${item.name}${starHtml}</td>
+                <td style="padding: 12px 12px; vertical-align: top;">${item.qty}</td>
             `;
             
             tr.addEventListener('dragstart', handleDragStart);
