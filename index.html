@@ -22,6 +22,9 @@
             --hint-bg: #f0f4f2;
             --hint-border: #c8d6cf;
             --hint-text: #2d4f3f;
+            --warning-bg: #fff5f5;
+            --warning-border: #feb2b2;
+            --warning-text: #c53030;
         }
 
         /* --- 基礎樣式 --- */
@@ -119,6 +122,19 @@
             font-size: 10px;
             top: 2px;
         }
+
+        /* 解析失敗提醒區域 */
+        .parsing-warning {
+            background-color: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            color: var(--warning-text);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: none;
+        }
+        .parsing-warning b { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
 
         /* --- 模式切換樣式 --- */
         .mode-selector {
@@ -421,6 +437,12 @@
         <span><b>互動操作：</b>可針對各分類獨立切換模式，拖拉品項可合併或排序。</span>
     </div>
 
+    <!-- 異常提醒區域 -->
+    <div id="warnBox" class="parsing-warning">
+        <b><i data-lucide="alert-triangle"></i> 偵測到無法解析的行：</b>
+        <div id="warnList"></div>
+    </div>
+
     <div class="mode-selector">
         <label>
             <input type="radio" name="calcMode" value="split" checked>
@@ -472,31 +494,48 @@
 
     function parseLinesToItems(lines, mode) {
         const summaryObj = {};
+        let parsedAny = false;
+
         lines.forEach(line => {
             let trimmed = line.trim();
             if (trimmed.includes('=')) trimmed = trimmed.split('=')[0].trim();
             const parts = trimmed.split('-');
             const content = parts.slice(1).join('-').trim();
+            if (!content) return;
+
             const rawItems = (mode === 'combo') ? [content] : content.split('+');
 
             rawItems.forEach(rawItem => {
                 const subItem = rawItem.trim();
+                if (!subItem) return;
+
+                // 強化正則：即使沒有金額，也應保留品項（預設 0 元）
                 const match = subItem.match(/^(.*?)(\d+)\s*元?$/);
+                
+                let detail, price;
                 if (match) {
-                    let detail = match[1].trim(); 
-                    const price = parseInt(match[2], 10);
+                    detail = match[1].trim();
+                    price = parseInt(match[2], 10);
+                } else {
+                    // 如果沒有匹配到金額，保留全稱並設為 0 元
+                    detail = subItem;
+                    price = 0;
+                }
+
+                if (detail) {
                     detail = detail.replace(/([^\s])(無糖|微糖|一分糖|二分糖|三分糖|半糖|少糖|七分糖|去冰|微冰|少冰|多冰|正常|熱)/g, '$1 $2').replace(/\s+/g, ' ').trim();
                     const key = `${detail}_${price}`;
                     if (!summaryObj[key]) {
                         summaryObj[key] = { name: detail, qty: 0, price: price, isMinor: false, checked: false };
                     }
                     summaryObj[key].qty += 1;
+                    parsedAny = true;
                 }
             });
         });
         const items = Object.values(summaryObj);
         items.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
-        return items;
+        return { items, hasData: parsedAny };
     }
 
     function processOrder() {
@@ -506,6 +545,7 @@
         const lines = input.split('\n');
         const defaultMode = document.querySelector('input[name="calcMode"]:checked').value;
         const tempCategoryMap = new Map();
+        const failedLines = [];
         
         let currentCatName = "一般品項";
 
@@ -513,6 +553,7 @@
             let trimmed = line.trim();
             if (!trimmed || trimmed.startsWith('---')) return;
 
+            // 判斷是否為分類行（不含減號，且不是樓層或無效字元）
             if (!trimmed.includes('-')) {
                 if (trimmed.match(/^\d+[fF樓]$/) || trimmed.length <= 1) return;
                 if (trimmed.includes('結單')) return;
@@ -520,6 +561,7 @@
                 return;
             }
 
+            // 判斷是否為點餐行
             if (!tempCategoryMap.has(currentCatName)) {
                 tempCategoryMap.set(currentCatName, []);
             }
@@ -527,9 +569,23 @@
         });
 
         categoryData = Array.from(tempCategoryMap).map(([name, rawLines]) => {
-            const items = parseLinesToItems(rawLines, defaultMode);
-            return { catName: name, mode: defaultMode, rawLines, items };
+            const result = parseLinesToItems(rawLines, defaultMode);
+            // 如果該行有內容但解析後什麼都沒有，記錄下來
+            if (rawLines.length > 0 && !result.hasData) {
+                rawLines.forEach(rl => failedLines.push(rl));
+            }
+            return { catName: name, mode: defaultMode, rawLines, items: result.items };
         });
+
+        // 處理警告視窗
+        const warnBox = document.getElementById('warnBox');
+        if (failedLines.length > 0) {
+            warnBox.style.display = 'block';
+            document.getElementById('warnList').innerHTML = failedLines.map(line => `· ${line}`).join('<br>');
+            initIcons();
+        } else {
+            warnBox.style.display = 'none';
+        }
 
         checkAllMinorItems();
         renderDisplay();
@@ -538,7 +594,7 @@
     function changeCatMode(catIdx, newMode) {
         const cat = categoryData[catIdx];
         cat.mode = newMode;
-        cat.items = parseLinesToItems(cat.rawLines, newMode);
+        cat.items = parseLinesToItems(cat.rawLines, newMode).items;
         checkAllMinorItems();
         renderDisplay();
         showMessage(`「${cat.catName}」已切換模式`);
@@ -567,6 +623,8 @@
         container.innerHTML = "";
 
         categoryData.forEach((cat, catIdx) => {
+            if (cat.items.length === 0) return; // 跳過空的分類
+
             let catQty = 0;
             let catAmount = 0;
             
@@ -724,6 +782,7 @@
         if (categoryData.length === 0) return;
         let blocks = [];
         categoryData.forEach(cat => {
+            if (cat.items.length === 0) return;
             let catQty = 0;
             let catAmount = 0;
             let itemLines = [];
@@ -733,7 +792,7 @@
                 catQty += item.qty;
                 catAmount += (item.qty * item.price);
             });
-            let blockText = itemLines.join('\n');
+            let blockText = `【${cat.catName}】\n` + itemLines.join('\n');
             blockText += `\n\n份數：${catQty} 份\n金額：$${catAmount.toLocaleString()}`;
             blocks.push(blockText);
         });
@@ -756,6 +815,7 @@
     function clearContent() {
         document.getElementById('inputData').value = "";
         document.getElementById('resultArea').style.display = 'none';
+        document.getElementById('warnBox').style.display = 'none';
         categoryData = [];
     }
 
