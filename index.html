@@ -439,7 +439,6 @@
 
     <!-- 異常提醒區域 -->
     <div id="warnBox" class="parsing-warning">
-        <b><i data-lucide="alert-triangle"></i> 偵測到無法解析的行：</b>
         <div id="warnList"></div>
     </div>
 
@@ -492,6 +491,27 @@
         isHidden ? btn.classList.add('active') : btn.classList.remove('active');
     }
 
+    // 輔助函式：將字串按「+」號拆分，但忽略括號內的「+」
+    function splitByPlusOutsideBrackets(str) {
+        const result = [];
+        let current = "";
+        let depth = 0; // 追蹤括號深度
+        for (let i = 0; i < str.length; i++) {
+            const char = str[i];
+            if (char === '(' || char === '（') depth++;
+            else if (char === ')' || char === '）') depth--;
+
+            if (char === '+' && depth === 0) {
+                result.push(current.trim());
+                current = "";
+            } else {
+                current += char;
+            }
+        }
+        result.push(current.trim());
+        return result.filter(item => item !== "");
+    }
+
     function parseLinesToItems(lines, mode) {
         const summaryObj = {};
         let parsedAny = false;
@@ -503,7 +523,8 @@
             const content = parts.slice(1).join('-').trim();
             if (!content) return;
 
-            const rawItems = (mode === 'combo') ? [content] : content.split('+');
+            // 如果是標準模式，使用優化後的拆分邏輯
+            const rawItems = (mode === 'combo') ? [content] : splitByPlusOutsideBrackets(content);
 
             rawItems.forEach(rawItem => {
                 const subItem = rawItem.trim();
@@ -577,11 +598,35 @@
             return { catName: name, mode: defaultMode, rawLines, items: result.items };
         });
 
-        // 處理警告視窗
+        // 彙整未輸入金額的品項 (price === 0)
+        let zeroPriceItems = [];
+        categoryData.forEach(cat => {
+            cat.items.forEach(item => {
+                if (item.price === 0) {
+                    zeroPriceItems.push(`「${cat.catName}」中的 ${item.name}`);
+                }
+            });
+        });
+
+        // 處理警告視窗內容
         const warnBox = document.getElementById('warnBox');
-        if (failedLines.length > 0) {
+        const warnList = document.getElementById('warnList');
+        
+        if (failedLines.length > 0 || zeroPriceItems.length > 0) {
             warnBox.style.display = 'block';
-            document.getElementById('warnList').innerHTML = failedLines.map(line => `· ${line}`).join('<br>');
+            let warnHtml = "";
+            
+            if (failedLines.length > 0) {
+                warnHtml += `<b><i data-lucide="alert-triangle"></i> 偵測到無法解析的行：</b>`;
+                warnHtml += `<div style="margin-bottom: 10px;">${failedLines.map(line => `· ${line}`).join('<br>')}</div>`;
+            }
+            
+            if (zeroPriceItems.length > 0) {
+                warnHtml += `<b><i data-lucide="info"></i> 偵測到未輸入金額的品項（預設 0 元）：</b>`;
+                warnHtml += `<div>${zeroPriceItems.map(item => `· ${item}`).join('<br>')}</div>`;
+            }
+            
+            warnList.innerHTML = warnHtml;
             initIcons();
         } else {
             warnBox.style.display = 'none';
