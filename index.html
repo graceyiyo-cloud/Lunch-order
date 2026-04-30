@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>訂單金額統計助手 - 深色質感版</title>
+    <title>訂單金額統計助手</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         /* --- 變數定義：深色質感配色 --- */
@@ -32,7 +32,7 @@
             font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; 
             max-width: 488px; 
             margin: 10px auto; 
-            padding: 15px; 
+            padding: 6px; /* 最小化行動端邊距 */
             line-height: 1.6; 
             background-color: var(--bg-color); 
             color: var(--text-color);
@@ -40,7 +40,7 @@
 
         .container { 
             background: var(--card-bg); 
-            padding: 25px 22px; 
+            padding: 25px 15px; /* 縮減水平邊距 */
             border-radius: 20px; 
             box-shadow: 0 10px 30px rgba(58, 99, 81, 0.15); 
         }
@@ -423,7 +423,7 @@
 
 <div class="container">
     <div class="header-area">
-        <h2><i data-lucide="shield-check"></i> 訂單明細統計助手 <i data-lucide="shield-check"></i></h2>
+        <h2><i data-lucide="shield-check"></i> 訂單金額統計助手 <i data-lucide="shield-check"></i></h2>
         <button class="help-toggle-btn" onclick="toggleHint()" title="顯示幫助">
             <i data-lucide="help-circle"></i>
         </button>
